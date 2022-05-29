@@ -1,0 +1,11 @@
+raw-flags: -pthread
+
+build:
+	command: compile
+	main: main.cpp
+	raw-flags: -pthread
+
+start:
+	command: run
+	main: main.cpp
+	raw-flags: -pthread
