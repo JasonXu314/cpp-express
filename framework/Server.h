@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "Request.h"
+#include "Response.h"
 
 const int BUFFER_SIZE = 4096;
 
@@ -24,32 +25,17 @@ public:
 	void start();
 	void wait();
 
-	Server& get(const std::string& path, const std::function<std::string(const Request&)>& handler) {
-		_handlers[path][Method::GET] = handler;
-		return *this;
-	}
-	Server& post(const std::string& path, const std::function<std::string(const Request&)>& handler) {
-		_handlers[path][Method::POST] = handler;
-		return *this;
-	}
-	Server& put(const std::string& path, const std::function<std::string(const Request&)>& handler) {
-		_handlers[path][Method::PUT] = handler;
-		return *this;
-	}
-	Server& del(const std::string& path, const std::function<std::string(const Request&)>& handler) {
-		_handlers[path][Method::DELETE] = handler;
-		return *this;
-	}
-	Server& patch(const std::string& path, const std::function<std::string(const Request&)>& handler) {
-		_handlers[path][Method::PATCH] = handler;
-		return *this;
-	}
+	Server& get(const std::string& path, const std::function<void(const Request&, const Response&)>& handler);
+	Server& post(const std::string& path, const std::function<void(const Request&, const Response&)>& handler);
+	Server& put(const std::string& path, const std::function<void(const Request&, const Response&)>& handler);
+	Server& del(const std::string& path, const std::function<void(const Request&, const Response&)>& handler);
+	Server& patch(const std::string& path, const std::function<void(const Request&, const Response&)>& handler);
 
 private:
 	int _port;
 	int _serverSocket;
 	std::thread _thread;
-	std::map<std::string, std::map<Method, std::function<std::string(const Request&)>>> _handlers;
+	std::map<std::string, std::map<Method, std::function<void(const Request&, const Response&)>>> _handlers;
 	char* _buffer;
 
 	void _clearBuffer();

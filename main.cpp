@@ -14,7 +14,7 @@ int main() {
 
 	server
 		.get("/",
-			 [](const Request& req) {
+			 [](const Request& req, const Response& res) {
 				 stringstream ss;
 
 				 ss << "<html>\n"
@@ -30,23 +30,41 @@ int main() {
 
 				 ss << "</body>\n"
 					<< "</html>\n";
+				 res.header("Content-Type", "text/html").send(ss.str());
 
-				 return ss.str();
+				 res.send(ss.str());
 			 })
-		.post("/", [](const Request& req) {
-			stringstream ss;
+		.post("/",
+			  [](const Request& req, const Response& res) {
+				  stringstream ss;
 
-			ss << "<html>\n"
-			   << "<head>\n"
-			   << "<title>Hello, World!</title>\n"
-			   << "</head>\n"
-			   << "<body>\n"
-			   << "<h1>Hello, World!</h1>\n"
-			   << "<p>Hello, " << req.body() << "!</p>\n"
-			   << "</body>\n"
-			   << "</html>\n";
+				  ss << "<html>\n"
+					 << "<head>\n"
+					 << "<title>Hello, World!</title>\n"
+					 << "</head>\n"
+					 << "<body>\n"
+					 << "<h1>Hello, World!</h1>\n"
+					 << "<p>Hello, " << req.body() << "!</p>\n"
+					 << "</body>\n"
+					 << "</html>\n";
 
-			return ss.str();
+				  res.status(201);
+				  res.header("Content-Type", "text/html");
+
+				  res.send(ss.str());
+			  })
+		.get("/404", [](const Request& req, const Response& res) {
+			res.status(404);
+			res.header("Content-Type", "text/html");
+			res.send(
+				"<html>\n"
+				"<head>\n"
+				"<title>404 Not Found</title>\n"
+				"</head>\n"
+				"<body>\n"
+				"<h1>404 Not Found</h1>\n"
+				"</body>\n"
+				"</html>\n");
 		});
 
 	server.start();

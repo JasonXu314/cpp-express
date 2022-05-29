@@ -71,15 +71,26 @@ void Server::start() {
 
 				send(clientSocket, ss.str().c_str(), ss.str().length(), 0);
 			} else {
-				string responseStr = _handlers[req.path()][req.method()](req);
-				stringstream ss;
-				ss << "HTTP/1.1 200 OK\n"
-				   << "Content-Type: text/html\n"
-				   << "Content-Length: " << responseStr.length() << "\n"
-				   << "\n"
-				   << responseStr;
+				Response res([&clientSocket, &res]() {
+					stringstream ss;
+					ss << "HTTP/1.1 " << res._status << " OK\n";
 
-				send(clientSocket, ss.str().c_str(), ss.str().length(), 0);
+					for (auto& header : res._headers) {
+						ss << header.first << ": " << header.second << "\n";
+					}
+
+					if (!res._headers.count("Content-Type")) {
+						ss << "Content-Type: text/plain\n";
+					}
+
+					ss << "Content-Length: " << res._body.length() << "\n"
+					   << "\n"
+					   << res._body;
+
+					send(clientSocket, ss.str().c_str(), ss.str().length(), 0);
+				});
+
+				_handlers[req.path()][req.method()](req, res);
 			}
 
 			close(clientSocket);
@@ -89,6 +100,31 @@ void Server::start() {
 }
 
 void Server::wait() { _thread.join(); }
+
+Server& Server::get(const string& path, const function<void(const Request&, const Response&)>& handler) {
+	_handlers[path][Method::GET] = handler;
+	return *this;
+}
+
+Server& Server::post(const string& path, const function<void(const Request&, const Response&)>& handler) {
+	_handlers[path][Method::POST] = handler;
+	return *this;
+}
+
+Server& Server::put(const string& path, const function<void(const Request&, const Response&)>& handler) {
+	_handlers[path][Method::PUT] = handler;
+	return *this;
+}
+
+Server& Server::del(const string& path, const function<void(const Request&, const Response&)>& handler) {
+	_handlers[path][Method::DELETE] = handler;
+	return *this;
+}
+
+Server& Server::patch(const string& path, const function<void(const Request&, const Response&)>& handler) {
+	_handlers[path][Method::PATCH] = handler;
+	return *this;
+}
 
 Server::~Server() {
 	pthread_kill(_thread.native_handle(), SIGINT);
